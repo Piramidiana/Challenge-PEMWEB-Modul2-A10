@@ -174,7 +174,6 @@
 
         // LocalStorage Key Constant
         const STORAGE_KEY = 'taskflow_tasks_v2';
-
         // DOM Element References
         const todoForm = document.getElementById('todoForm');
         const taskInput = document.getElementById('taskInput');
@@ -183,11 +182,9 @@
         const inputWarning = document.getElementById('inputWarning');
         const remainingCount = document.getElementById('remainingCount');
         const filterBtns = document.querySelectorAll('.filter-btn');
-
         // State variables
         let tasks = [];
         let currentFilter = 'all';
-
         // Load tasks from LocalStorage safely
         const loadTasks = () => {
             try {
@@ -198,7 +195,6 @@
                 tasks = [];
             }
         };
-
         // Save tasks array to LocalStorage using JSON.stringify
         const saveTasks = () => {
             try {
@@ -271,9 +267,7 @@
 
                 fragment.appendChild(li);
             });
-
             taskList.appendChild(fragment);
-
             // Update stats counter
             updateStats();
         };
@@ -308,19 +302,16 @@
             }
 
             inputWarning.classList.add('hidden');
-
             // Create new task object
             const newTask = {
                 id: Date.now(),
                 text: trimmedText,
                 completed: false
             };
-
             // Add to array & persist
             tasks.unshift(newTask);
             saveTasks();
             renderTasks();
-
             // Clear input box
             taskInput.value = '';
         };
