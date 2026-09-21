@@ -1,23 +1,435 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>To-Do List</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Modern To-Do List</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        glow: '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom scrollbar for task list */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+    </style>
 </head>
-<body>
-  <h1>To-Do List</h1>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
 
-  <input type="text" id="taskInput" placeholder="Tulis task di sini">
-  <button id="addButton">Add</button>
+    <!-- Background Ambient Glow Effects -->
+    <div class="fixed top-1/4 -left-20 w-80 h-80 bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="fixed bottom-1/4 -right-20 w-80 h-80 bg-purple-600/20 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="fixed top-3/4 left-1/3 w-64 h-64 bg-pink-600/15 rounded-full blur-[100px] pointer-events-none"></div>
 
-  <div>
-    <button id="allButton">All</button>
-    <button id="completedButton">Completed</button>
-  </div>
+    <main class="w-full max-w-xl bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-3xl shadow-2xl p-6 sm:p-8 relative z-10 my-8">
+        
+        <!-- Header Section -->
+        <header class="mb-6">
+            <div class="flex items-center justify-between gap-3 mb-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-glow">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                            TaskFlow
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Pro</span>
+                        </h1>
+                        <p class="text-xs text-slate-400">Atur agenda dan capai target harianmu ✨</p>
+                    </div>
+                </div>
+            </div>
 
-  <ul id="taskList"></ul>
+            <!-- Progress Tracker Bar -->
+            <div class="mt-5 p-4 rounded-2xl bg-slate-800/40 border border-slate-800/80">
+                <div class="flex justify-between items-center text-xs font-medium mb-2">
+                    <span class="text-slate-300">Kemajuan Tugas</span>
+                    <span id="progressText" class="text-indigo-400 font-semibold">0% Selesai</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div id="progressBar" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-out w-0"></div>
+                </div>
+            </div>
+        </header>
 
-  <script src="script.js"></script>
+        <!-- Input Task Section -->
+        <section class="mb-6">
+            <form id="todoForm" class="relative">
+                <div class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <input 
+                            type="text" 
+                            id="taskInput" 
+                            placeholder="Apa yang ingin kamu selesaikan hari ini?" 
+                            class="w-full bg-slate-950/60 text-slate-100 placeholder-slate-500 text-sm rounded-xl px-4 py-3.5 pl-11 border border-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                            autocomplete="off"
+                        >
+                        <svg class="w-5 h-5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </div>
+                    <button 
+                        type="submit" 
+                        id="addButton"
+                        class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-sm font-semibold px-5 py-3.5 rounded-xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 active:scale-95 transition-all duration-200 flex items-center gap-1.5 shrink-0"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Tambah</span>
+                    </button>
+                </div>
+                <!-- Warning Feedback Notification -->
+                <div id="inputWarning" class="hidden absolute left-0 -bottom-6 text-xs text-rose-400 flex items-center gap-1 font-medium mt-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Teks tugas tidak boleh kosong!
+                </div>
+            </form>
+        </section>
+
+        <!-- Filter Tabs & Stats Bar -->
+        <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4 pt-2">
+            <!-- Filter Buttons -->
+            <div class="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800/80 self-start sm:self-auto">
+                <button 
+                    id="filterAll" 
+                    data-filter="all"
+                    class="filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-indigo-600 shadow-sm transition-all duration-200"
+                >
+                    Semua
+                </button>
+                <button 
+                    id="filterActive" 
+                    data-filter="active"
+                    class="filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition-all duration-200"
+                >
+                    Belum Selesai
+                </button>
+                <button 
+                    id="filterCompleted" 
+                    data-filter="completed"
+                    class="filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition-all duration-200"
+                >
+                    Selesai
+                </button>
+            </div>
+
+            <!-- Task Counter -->
+            <div id="activeCounter" class="text-xs text-slate-400 font-medium self-end sm:self-auto">
+                Sisa <span id="remainingCount" class="text-indigo-400 font-bold">0</span> tugas
+            </div>
+        </section>
+
+        <!-- Task List Container -->
+        <section>
+            <ul id="taskList" class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar min-h-[140px]">
+                <!-- Task items rendered dynamically via JavaScript -->
+            </ul>
+
+            <!-- Empty State Illustration -->
+            <div id="emptyState" class="hidden flex-col items-center justify-center py-10 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-slate-800/50 flex items-center justify-center mb-3 border border-slate-800">
+                    <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+                <p class="text-sm font-semibold text-slate-300 mb-1">Belum ada tugas</p>
+                <p class="text-xs text-slate-500 max-w-xs">Tuliskan tugas pertamamu di atas untuk memulai daftar aktivitasmu.</p>
+            </div>
+        </section>
+
+        <!-- Footer Info -->
+        <footer class="mt-6 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-500">
+            <span>Disimpan otomatis di LocalStorage</span>
+            <span class="hover:text-slate-400 transition-colors">Modul 2 Pemrograman Web</span>
+        </footer>
+    </main>
+
+    <script>
+        // Use strict mode and declare initial variables using let and const
+        'use strict';
+
+        // LocalStorage Key Constant
+        const STORAGE_KEY = 'taskflow_tasks_v2';
+
+        // DOM Element References
+        const todoForm = document.getElementById('todoForm');
+        const taskInput = document.getElementById('taskInput');
+        const taskList = document.getElementById('taskList');
+        const emptyState = document.getElementById('emptyState');
+        const inputWarning = document.getElementById('inputWarning');
+        const remainingCount = document.getElementById('remainingCount');
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        // State variables
+        let tasks = [];
+        let currentFilter = 'all';
+
+        // Load tasks from LocalStorage safely
+        const loadTasks = () => {
+            try {
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                tasks = savedData ? JSON.parse(savedData) : [];
+            } catch (e) {
+                console.error('Error loading data from LocalStorage:', e);
+                tasks = [];
+            }
+        };
+
+        // Save tasks array to LocalStorage using JSON.stringify
+        const saveTasks = () => {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+            } catch (e) {
+                console.error('Error saving data to LocalStorage:', e);
+            }
+        };
+
+        // Render tasks according to current filter state
+        const renderTasks = () => {
+            // Apply filtering using Array.filter()
+            let filteredTasks = tasks;
+            if (currentFilter === 'active') {
+                filteredTasks = tasks.filter(task => !task.completed);
+            } else if (currentFilter === 'completed') {
+                filteredTasks = tasks.filter(task => task.completed);
+            }
+
+            // Clear container list
+            taskList.innerHTML = '';
+
+            // Toggle empty state illustration
+            if (filteredTasks.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+
+            // Build dynamic LI items using DocumentFragment for optimal performance
+            const fragment = document.createDocumentFragment();
+
+            filteredTasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `group flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-200 ${
+                    task.completed 
+                        ? 'bg-slate-950/40 border-slate-800/50 text-slate-500' 
+                        : 'bg-slate-800/40 border-slate-800 hover:border-slate-700 text-slate-100 shadow-sm'
+                }`;
+                li.dataset.id = task.id;
+
+                // Inner structure: Checkbox/Text area and Delete Button
+                li.innerHTML = `
+                    <div class="flex items-center gap-3 flex-1 min-w-0 mr-2 cursor-pointer task-content">
+                        <div class="task-checkbox w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all duration-200 ${
+                            task.completed 
+                                ? 'bg-emerald-500 border-emerald-500 text-slate-950' 
+                                : 'border-slate-600 group-hover:border-indigo-400 bg-slate-900/50'
+                        }">
+                            <svg class="w-3.5 h-3.5 ${task.completed ? 'block' : 'hidden'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <span class="task-text text-sm font-medium break-words select-none transition-all duration-200 ${
+                            task.completed ? 'line-through text-slate-500' : 'text-slate-200'
+                        }">${escapeHTML(task.text)}</span>
+                    </div>
+                    <button 
+                        type="button"
+                        class="delete-btn opacity-80 sm:opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 shrink-0"
+                        title="Hapus tugas"
+                    >
+                        <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                `;
+
+                fragment.appendChild(li);
+            });
+
+            taskList.appendChild(fragment);
+
+            // Update stats counter and progress bar
+            updateStats();
+        };
+
+        // Helper function to escape HTML special characters for safety
+        const escapeHTML = (str) => {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        };
+
+        // Update stats counters and visual progress bar
+        const updateStats = () => {
+            const totalTasks = tasks.length;
+            const completedCount = tasks.filter(t => t.completed).length;
+            const activeCount = totalTasks - completedCount;
+
+            // Update remaining count text
+            remainingCount.textContent = activeCount;
+
+            // Update progress bar percentage
+            const percentage = totalTasks === 0 ? 0 : Math.round((completedCount / totalTasks) * 100);
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage}% Selesai`;
+        };
+
+        // Add new task handler
+        const addTask = (text) => {
+            const trimmedText = text.trim();
+            if (!trimmedText) {
+                // Show warning message if empty
+                inputWarning.classList.remove('hidden');
+                setTimeout(() => {
+                    inputWarning.classList.add('hidden');
+                }, 3000);
+                return;
+            }
+
+            inputWarning.classList.add('hidden');
+
+            // Create new task object
+            const newTask = {
+                id: Date.now(),
+                text: trimmedText,
+                completed: false
+            };
+
+            // Add to array & persist
+            tasks.unshift(newTask);
+            saveTasks();
+            renderTasks();
+
+            // Clear input box
+            taskInput.value = '';
+        };
+
+        // Toggle completed status for a task
+        const toggleTask = (id) => {
+            tasks = tasks.map(task => {
+                if (task.id === id) {
+                    return { ...task, completed: !task.completed };
+                }
+                return task;
+            });
+            saveTasks();
+            renderTasks();
+        };
+
+        // Delete a task by ID
+        const deleteTask = (id) => {
+            tasks = tasks.filter(task => task.id !== id);
+            saveTasks();
+            renderTasks();
+        };
+
+        // Attach form submit event
+        todoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addTask(taskInput.value);
+        });
+
+        // Hide warning as user types
+        taskInput.addEventListener('input', () => {
+            if (!inputWarning.classList.contains('hidden')) {
+                inputWarning.classList.add('hidden');
+            }
+        });
+
+        // Event delegation on taskList for toggle and delete actions
+        taskList.addEventListener('click', (e) => {
+            const li = e.target.closest('li');
+            if (!li) return;
+
+            const taskId = Number(li.dataset.id);
+
+            // Check if delete button was clicked
+            if (e.target.closest('.delete-btn')) {
+                deleteTask(taskId);
+                return;
+            }
+
+            // Check if task content area was clicked
+            if (e.target.closest('.task-content')) {
+                toggleTask(taskId);
+            }
+        });
+
+        // Event listeners for Filter Buttons
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active styling from all buttons
+                filterBtns.forEach(b => {
+                    b.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+                    b.classList.add('text-slate-400');
+                });
+
+                // Add active styling to clicked button
+                btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+                btn.classList.remove('text-slate-400');
+
+                // Update filter state and re-render
+                currentFilter = btn.dataset.filter;
+                renderTasks();
+            });
+        });
+
+        // Initialize App on DOM load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTasks();
+
+            // Default seed data if empty on first visit
+            if (tasks.length === 0) {
+                tasks = [
+                    { id: 1, text: 'Membuat Website to-do list modern', completed: true },
+                    { id: 2, text: 'Kerjain Modul 2 Pemrograman Web', completed: false },
+                    { id: 3, text: 'Beli Geprek Mazzeh', completed: false }
+                ];
+                saveTasks();
+            }
+
+            renderTasks();
+        });
+    </script>
 </body>
 </html>
